@@ -6,4 +6,5 @@ numpy
 scikit-learn
 python-multipart
 requests
-huggingface_hub
+torch
+transformers
