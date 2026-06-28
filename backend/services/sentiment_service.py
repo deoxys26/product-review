@@ -1,13 +1,16 @@
+from pathlib import Path
 from transformers import pipeline
 
 from backend.repositories.review_repository import ReviewRepository
 from backend.services.aspect_service import AspectService
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+MODEL_PATH = BASE_DIR / "saved_model"
 
 classifier = pipeline(
     "sentiment-analysis",
-    model="saved_model",
-    tokenizer="saved_model"
+    model=str(MODEL_PATH),
+    tokenizer=str(MODEL_PATH)
 )
 
 
