@@ -20,3 +20,4 @@ saved_model/
 *.xlsx
 *.bin
 *.onnx
+backend/saved_model/
