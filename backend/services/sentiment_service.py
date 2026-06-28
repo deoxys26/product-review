@@ -4,11 +4,10 @@ import requests
 from backend.repositories.review_repository import ReviewRepository
 from backend.services.aspect_service import AspectService
 
-
+# Explicitly routing through the new Hugging Face core router
 HF_API_URL = "https://router.huggingface.co/hf-inference/models/deoxys26/amazon-sentiment-distilbert"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-
 def normalize_text(text: str):
     slang_map = {
         "goated": "excellent",
@@ -22,71 +21,47 @@ def normalize_text(text: str):
         "worst": "terrible",
         "bad": "terrible"
     }
-
-    words = text.lower().split()
-
-    normalized_words = [
-        slang_map.get(word, word)
-        for word in words
-    ]
-
-    return " ".join(normalized_words)
-
-
-import os
-from huggingface_hub import InferenceClient
-
-from backend.repositories.review_repository import ReviewRepository
-from backend.services.aspect_service import AspectService
-
-# Initialize the official Hugging Face client
-# (It manages the entire connection architecture securely using your token)
-HF_TOKEN = os.getenv("HF_TOKEN")
-client = InferenceClient(token=HF_TOKEN)
-
-def normalize_text(text: str):
-    slang_map = {
-        "goated": "excellent",
-        "goat": "excellent",
-        "fire": "excellent",
-        "lit": "excellent",
-        "dope": "excellent",
-        "trash": "terrible",
-        "mid": "average",
-        "sucks": "terrible",
-        "worst": "terrible",
-        "bad": "terrible"
-    }
-
     words = text.lower().split()
     normalized_words = [slang_map.get(word, word) for word in words]
     return " ".join(normalized_words)
 
-# We replace the old manual request block with this clean SDK call
 def query_huggingface(text: str):
-    # This automatically structures the exact JSON payload the router demands
-    return client.text_classification(
-        text, 
-        model="deoxys26/amazon-sentiment-distilbert"
-    )
+    headers = {
+        "Authorization": f"Bearer {HF_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    
+    # The new router endpoint expects the raw single input wrapper
+    payload = {"inputs": text}
 
-# ... (The rest of your SentimentService class remains exactly the same!)
-
+    try:
+        response = requests.post(
+            HF_API_URL,
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+    except StopIteration as e:
+        # Prevents Python 3.14 from turning internal iterator closures into coroutine RuntimeErrors
+        raise RuntimeError(f"Internal loop processing error: {e}")
 
 class SentimentService:
 
     @staticmethod
     def predict(review: str):
-
         normalized_review = normalize_text(review)
-
         result = query_huggingface(normalized_review)
 
-        # Hugging Face may return [[{label, score}, ...]]
-        if isinstance(result, list) and len(result) > 0 and isinstance(result[0], list):
-            prediction = max(result[0], key=lambda x: x["score"])
+        # Safeguard array parsing structures safely
+        if isinstance(result, list) and len(result) > 0:
+            if isinstance(result[0], list):
+                prediction = max(result[0], key=lambda x: x["score"])
+            else:
+                prediction = result[0]
         else:
-            prediction = result[0]
+            raise ValueError(f"Unexpected response format from AI model router: {result}")
 
         sentiment = (
             "Positive"
@@ -95,7 +70,6 @@ class SentimentService:
         )
 
         confidence = round(prediction["score"], 4)
-
         aspects = AspectService.extract(review)
 
         ReviewRepository.save_review(
