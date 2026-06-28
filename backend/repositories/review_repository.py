@@ -1,7 +1,7 @@
 from collections import Counter
 
-from backend.database.database import SessionLocal
-from backend.database.models import Review
+from database.database import SessionLocal
+from database.models import Review
 
 
 class ReviewRepository:
