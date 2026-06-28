@@ -5,7 +5,7 @@ from backend.repositories.review_repository import ReviewRepository
 from backend.services.aspect_service import AspectService
 
 
-HF_API_URL = "https://api-inference.huggingface.co/models/deoxys26/amazon-sentiment-distilbert"
+HF_API_URL = "https://router.huggingface.co/hf-inference/models/deoxys26/amazon-sentiment-distilbert"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 
