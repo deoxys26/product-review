@@ -33,27 +33,44 @@ def normalize_text(text: str):
     return " ".join(normalized_words)
 
 
+import os
+from huggingface_hub import InferenceClient
+
+from backend.repositories.review_repository import ReviewRepository
+from backend.services.aspect_service import AspectService
+
+# Initialize the official Hugging Face client
+# (It manages the entire connection architecture securely using your token)
+HF_TOKEN = os.getenv("HF_TOKEN")
+client = InferenceClient(token=HF_TOKEN)
+
+def normalize_text(text: str):
+    slang_map = {
+        "goated": "excellent",
+        "goat": "excellent",
+        "fire": "excellent",
+        "lit": "excellent",
+        "dope": "excellent",
+        "trash": "terrible",
+        "mid": "average",
+        "sucks": "terrible",
+        "worst": "terrible",
+        "bad": "terrible"
+    }
+
+    words = text.lower().split()
+    normalized_words = [slang_map.get(word, word) for word in words]
+    return " ".join(normalized_words)
+
+# We replace the old manual request block with this clean SDK call
 def query_huggingface(text: str):
-    headers = {
-        "Authorization": f"Bearer {HF_TOKEN}",
-        "Content-Type": "application/json"  # Ensure explicit JSON content-type header
-    }
-
-    # The new router endpoint prefers the payload wrapped in a standard structure
-    payload = {
-        "inputs": text,
-        "options": {"wait_for_model": True}  # Tells HF to wait if the model is loading instead of failing
-    }
-
-    response = requests.post(
-        HF_API_URL,
-        headers=headers,
-        json=payload,
-        timeout=30
+    # This automatically structures the exact JSON payload the router demands
+    return client.text_classification(
+        text, 
+        model="deoxys26/amazon-sentiment-distilbert"
     )
 
-    response.raise_for_status()
-    return response.json()
+# ... (The rest of your SentimentService class remains exactly the same!)
 
 
 class SentimentService:
