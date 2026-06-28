@@ -5,7 +5,8 @@ from backend.repositories.review_repository import ReviewRepository
 from backend.services.aspect_service import AspectService
 
 # Explicitly routing through the new Hugging Face core router
-HF_API_URL = "https://router.huggingface.co/hf-inference/models/deoxys26/amazon-sentiment-distilbert"
+# Change this exact line at the top of your file to append the explicit pipeline task route:
+HF_API_URL = "https://router.huggingface.co/hf-inference/models/deoxys26/amazon-sentiment-distilbert/pipeline/text-classification"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 def normalize_text(text: str):
