@@ -8,16 +8,17 @@ app = FastAPI(
     title="Amazon Sentiment API"
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+# ... (your other code)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173", 
-        "http://127.0.0.1:5173",
-        "https://product-review-kohl.vercel.app" # <-- Check this line carefully!
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    # Using a wildcard allows Vercel to bypass preflight locks entirely
+    allow_origins=["*"], 
+    allow_credentials=False,  # Must be False if allow_origins is "*"
+    allow_methods=["*"],      # Allows POST, OPTIONS, GET, etc.
+    allow_headers=["*"],      # Allows Content-Type, Authorization, etc.
 )
 
 Base.metadata.create_all(bind=engine)
