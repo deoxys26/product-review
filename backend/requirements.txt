@@ -1,8 +1,9 @@
 fastapi
 uvicorn
+sqlalchemy
 pydantic
-python-multipart
 transformers
 torch
 numpy
 scikit-learn
+python-multipart
