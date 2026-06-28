@@ -35,13 +35,20 @@ def normalize_text(text: str):
 
 def query_huggingface(text: str):
     headers = {
-        "Authorization": f"Bearer {HF_TOKEN}"
+        "Authorization": f"Bearer {HF_TOKEN}",
+        "Content-Type": "application/json"  # Ensure explicit JSON content-type header
+    }
+
+    # The new router endpoint prefers the payload wrapped in a standard structure
+    payload = {
+        "inputs": text,
+        "options": {"wait_for_model": True}  # Tells HF to wait if the model is loading instead of failing
     }
 
     response = requests.post(
         HF_API_URL,
         headers=headers,
-        json={"inputs": text},
+        json=payload,
         timeout=30
     )
 
